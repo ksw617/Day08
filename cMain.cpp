@@ -1,41 +1,17 @@
-#include <iostream>
+#include <stdio.h>
 #include <Windows.h>
-#include <math.h>
 
-#include <list>
-#include <set>
 
-using namespace std;
-
-#define MapHeight 30
-#define MapWidth 30
+#define MAP_HEIGHT 30
+#define MAP_WIDTH 30
 
 #pragma region Color
 
-enum Color
-{
-	BLACK,
-	BLUE,
-	GREEN,
-	CYAN,
-	RED,
-	MAGENTA,
-	BROWN,
-	LIGHTGRAY,
-	DARKGRAY,
-	LIGHTBLUE,
-	LIGHTGREEN,
-	LIGHTCYAN,
-	LIGHTRED,
-	LIGHTMAGENTA,
-	YELLOW,
-	WHITE,
-};
 
 #pragma endregion
 #pragma region Map
 
-int map[MapHeight][MapWidth] =
+int map[MAP_HEIGHT][MAP_WIDTH] =
 {
 	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -73,323 +49,331 @@ int map[MapHeight][MapWidth] =
 #pragma endregion
 
 
-struct Node* startNode = nullptr;
-struct Node* targetNode = nullptr;
-bool found = false;
-
-#pragma region Node
-
-struct Node
+#pragma region Enum
+enum Color
 {
-	Node* parentNode = nullptr;
-
-	int x;
-	int y;
-	bool wall = false;
-
-	Color color = BLACK;
-
-	int gCost = 0;
-	int hCost = 0;
-
-	int Fcost() const { return gCost + hCost; }
-	Node(int _x, int _y, int mapIndex) : x(_x), y(_y)
-	{
-		switch (mapIndex)
-		{
-		case 1:
-			wall = true;
-			color = WHITE;
-			break;
-
-		case 2:
-			startNode = this;
-			color = YELLOW;
-			break;
-		case 3:
-			targetNode = this;
-			color = BLUE;
-			break;
-		default:
-			break;
-		}
-	}
-
+	Black,
+	DarkBlue,
+	DarkGreen,
+	DarkCyan,
+	DarkRed,
+	DarkMagenta,
+	DarkYellow,
+	Gray,
+	DarkGray,
+	Blue,
+	Green,
+	Cyan,
+	Red,
+	Magenta,
+	Yellow,
+	White,
 };
 
+enum DIR
+{
+	NONE,
+	LEFT,
+	RIGHT,
+	UP,
+	DOWN,
+};
+#pragma endregion
+#pragma region WIN_API
+void HideCursor();
+void SetPosition(int x, int y);
+void ChangeColor(Color color);
 #pragma endregion
 
-Node* grid[MapHeight][MapWidth] = {};
+struct Obj
+{
+	DIR dir;
+	int step;
+	int maxStep;
+	int x;
+	int y;
+	int hp;
+	Color color;
+	const char* shape;
+};
 
-void Init();
-void DrawMap();
+Obj* player = nullptr;
+Obj* enemy = nullptr;
 
-void FindPath(Node* startNode, Node* targetNode);
-list<Node*> GetNeighbours(Node* centerNode);
-int GetDistance(Node* nodeA, Node* nodeB);
+void InitStage();
+void UpdateStage();
+void ReleaseStage();
 
-
-#pragma region WinAPI
-int main();
-void MoveCursorPosition(int x, int y);
-void RemoveCursor();
-void ChangeColor(int color);
-#pragma endregion
-
-
+void EnemyStepReset();
+void MoveEnemy();
+void CheckKeyInput();
+bool IsBlocked(Obj* obj);
+void CheckItem();
+void ShowMap();
 
 int main()
 {
-	Init();
-	RemoveCursor();
+	HideCursor();
+	InitStage();
 
 	while (true)
 	{
 		system("cls");
 
-		if (GetAsyncKeyState(VK_RETURN))
-		{
-			if (!found)
-			{
-				found = true;
-				FindPath(startNode, targetNode);
+		UpdateStage();
+		Sleep(50);
 
-				Node* temp = targetNode;
-
-				while (temp != startNode)
-				{
-
-					temp = temp->parentNode;
-					if (temp != targetNode && temp != startNode)
-					{
-						temp->color = LIGHTMAGENTA;
-					}
-
-				}
-			}
-		}
-
-		DrawMap();
-
-		Sleep(1000);
 	}
+
+	ReleaseStage();
 
 	return 0;
 }
 
+#pragma region STAGE
 
-void Init()
+void InitStage()
 {
-	for (int y = 0; y < MapHeight; y++)
+	if (player == nullptr)
 	{
-		for (int x = 0; x < MapWidth; x++)
-		{
-			if (grid[y][x] == nullptr)
-			{
-				grid[y][x] = new Node(x, y, map[y][x]);
+		player = (Obj*)malloc(sizeof(Obj));
+		player->x = 10;
+		player->y = 10;
+		player->hp = 1;
+		player->color = Yellow;
+		player->shape = "＠";
+		player->dir = NONE;
 
-			}
-
-		}
 	}
 
-}
-
-void DrawMap()
-{
-	for (int y = 0; y < MapHeight; y++)
+	if (enemy == nullptr)
 	{
-		for (int x = 0; x < MapWidth; x++)
-		{
-			Node* node = grid[y][x];
-
-			if (node != nullptr)
-			{
-				switch (node->color)
-				{
-				case WHITE:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-				case RED:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-				case GREEN:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-				case BLUE:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-
-				case YELLOW:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-
-				case LIGHTMAGENTA:
-					ChangeColor(node->color);
-					MoveCursorPosition(node->x, node->y);
-					cout << "■";
-					break;
-				default:
-					break;
-				}
-			}
-
-
-		}
-	}
-
-}
-
-void FindPath(Node* startNode, Node* targetNode)
-{
-	list<Node*> openset;
-	set<Node*> closeSet;
-
-	openset.push_back(startNode);
-
-	while (!openset.empty())
-	{
-
-		Node* itBest = openset.front();
-
-		for (auto it : openset)
-		{
-			if (it->Fcost() < itBest->Fcost() || (it->Fcost() == itBest->Fcost() && it->hCost < itBest->hCost))
-			{
-				itBest = it;
-			}
-		}
-
-		openset.remove(itBest);
-		closeSet.insert(itBest);
-
-		if (itBest != startNode && itBest != targetNode)
-		{
-			itBest->color = RED;
-		}
-
-
-
-		if (itBest == targetNode)
-		{
-			//exit(true);
-			break;
-		}
-
-
-		for (Node* neighbourNode : GetNeighbours(itBest))
-		{
-			auto result = closeSet.find(neighbourNode);
-			if (result != closeSet.end())
-			{
-				continue;
-			}
-
-			int newGcost = itBest->gCost + GetDistance(itBest, neighbourNode);
-
-			if (neighbourNode->Fcost() != 0)
-			{
-				if (newGcost < neighbourNode->gCost)
-				{
-					neighbourNode->gCost = newGcost;
-
-					//이웃 노드의 부모는 현재 노드
-					neighbourNode->parentNode = itBest;
-				}
-
-				//여기는 해당 되지 않음
-			}
-			else
-			{
-				int newHcost = GetDistance(neighbourNode, targetNode);
-				neighbourNode->gCost = newGcost;
-				neighbourNode->hCost = newHcost;
-
-				openset.push_back(neighbourNode);
-				neighbourNode->color = GREEN;
-
-				//이웃 노드의 부모는 현재 노드
-				neighbourNode->parentNode = itBest;
-
-			}
-
-
-		}
-
-		DrawMap();
-		Sleep(50);
-
+		enemy = (Obj*)malloc(sizeof(Obj));
+		enemy->x = 14;
+		enemy->y = 5;
+		enemy->hp = 1;
+		enemy->color = Magenta;
+		enemy->shape = "♣";
+		EnemyStepReset();
 	}
 }
 
-//이웃 노드 탐색
-list<Node*> GetNeighbours(Node* centerNode)
+void EnemyStepReset()
 {
-	list<Node*> neighbours;
-
-	for (int y = -1; y <= 1; y++)
-	{
-		for (int x = -1; x <= 1; x++)
-		{
-			if (x == 0 && y == 0)
-				continue;
-
-			int checkX = centerNode->x + x;
-			int checkY = centerNode->y + y;
-
-			if ((0 <= checkX && checkX < MapWidth) && (0 <= checkY && checkY < MapHeight))
-			{
-				Node* checkNode = grid[checkY][checkX];
-				if (!checkNode->wall)
-				{
-					neighbours.push_back(checkNode);
-				}
-			}
-
-		}
-	}
-
-
-	return neighbours;
+	enemy->step = 0;
+	enemy->maxStep = rand() % 5 + 5;
+	enemy->dir = (DIR)(rand() % 5);
 }
 
-int GetDistance(Node* nodeA, Node* nodeB)
+void MoveEnemy()
 {
-	int distX = abs(nodeA->x - nodeB->x);
-	int distY = abs(nodeA->y - nodeB->y);
-
-	if (distX > distY)
+	enemy->step++;
+	if (enemy->step >= enemy->maxStep)
 	{
-		return 14 * distY + 10 * (distX - distY);
+		EnemyStepReset();
 	}
 	else
 	{
-		return 14 * distY + 10 * (distY - distX);
+		switch (enemy->dir)
+		{
+		case NONE:
+			break;
+		case LEFT:
+			enemy->x--;
+			break;
+		case RIGHT:
+			enemy->x++;
+			break;
+		case UP:
+			enemy->y--;
+			break;
+		case DOWN:
+			enemy->y++;
+			break;
+		default:
+			break;
+		}
+
+		if (IsBlocked(enemy))
+		{
+			switch (enemy->dir)
+			{
+			case NONE:
+				break;
+			case LEFT:
+				enemy->x++;
+				break;
+			case RIGHT:
+				enemy->x--;
+				break;
+			case UP:
+				enemy->y++;
+				break;
+			case DOWN:
+				enemy->y--;
+				break;
+			default:
+				break;
+			}
+
+			EnemyStepReset();
+		}
+
+	}
+
+
+
+
+}
+
+void CheckKeyInput()
+{
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		player->dir = LEFT;
+
+		player->x--;
+		if (IsBlocked(player))
+			player->x++;
+	}
+
+	if (GetAsyncKeyState(VK_RIGHT))
+	{
+
+		player->dir = RIGHT;
+
+		player->x++;
+		if (IsBlocked(player))
+			player->x--;
+	}
+
+	if (GetAsyncKeyState(VK_UP))
+	{
+
+		player->dir = UP;
+
+		player->y--;
+		if (IsBlocked(player))
+			player->y++;
+	}
+
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+
+		player->dir = DOWN;
+
+		player->y++;
+		if (IsBlocked(player))
+			player->y--;
+	}
+
+}
+
+void UpdateStage()
+{
+	MoveEnemy();
+	CheckItem();
+	CheckKeyInput();
+
+	SetPosition(player->x, player->y);
+	ChangeColor(player->color);
+	printf(player->shape);
+
+	SetPosition(enemy->x, enemy->y);
+	ChangeColor(enemy->color);
+	printf(enemy->shape);
+
+	ShowMap();
+}
+
+bool IsBlocked(Obj* obj)
+{
+	return  map[obj->y][obj->x] == 1;
+}
+
+void CheckItem()
+{
+	switch (map[player->y][player->x])
+	{
+	case 2:
+		break;
+	case 3:
+		player->hp++;
+		map[player->y][player->x] = 0;
+		break;
+	default:
+		break;
 	}
 }
 
+void ShowMap()
+{
+	for (int y = 0; y < MAP_WIDTH; y++)
+	{
+		for (int x = 0; x < MAP_HEIGHT; x++)
+		{
+			switch (map[y][x])
+			{
+			case 1:
+				SetPosition(x, y);
+				ChangeColor(White);
+				printf("■");
+				break;
+			case 2:
+				SetPosition(x, y);
+				ChangeColor(Yellow);
+				printf("￦");
+				break;
+			case 3:
+				SetPosition(x, y);
+				ChangeColor(Red);
+				printf("♥");
+				break;
+			default:
+				break;
+			}
+		}
+	}
 
-#pragma region WinAPI
-void MoveCursorPosition(int x, int y)
+
+
+	SetPosition(20, 0);
+	ChangeColor(Red);
+	printf("HP :");
+
+	//1
+	for (int i = 0; i < player->hp; i++)
+	{
+		SetPosition(22 + i, 0);
+		ChangeColor(Red);
+		printf("♥");
+	}
+
+}
+
+void ReleaseStage()
+{
+	if (player != nullptr)
+	{
+		free(player);
+		player = nullptr;
+	}
+}
+
+#pragma endregion
+
+#pragma region WIN_API
+//커서 이동
+void SetPosition(int x, int y)
 {
 	COORD pos;
 	pos.X = x * 2;
 	pos.Y = y;
-
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-void RemoveCursor()
+//커서 보이는거 방지
+void HideCursor()
 {
 	CONSOLE_CURSOR_INFO info;
 	info.bVisible = false;
@@ -398,8 +382,10 @@ void RemoveCursor()
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
 }
 
-void ChangeColor(int color)
+//색깔 바꾸기
+void ChangeColor(Color color)
 {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
+
 #pragma endregion
