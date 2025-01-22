@@ -28,24 +28,54 @@ void SetPosition(int x, int y);
 void ChangeColor(Color color);
 #pragma endregion
 
+struct Obj
+{
+	int x;
+	int y;
+	Color color;
+	const char* shape;
+};
+
+Obj* player = nullptr;
+
+void InitStage();
+void UpdateStage();
+void ReleaseStage();
+
 int main()
 {
 	HideCursor();
+	InitStage();
 
 	while (true)
 	{
 		system("cls");
 
-		SetPosition(10, 10);
-		ChangeColor(Yellow);
-		printf("Hello world");
-
+		UpdateStage();
 		Sleep(50);
 
 	}
 
+	ReleaseStage();
+
 	return 0;
 }
+
+#pragma region STAGE
+void InitStage()
+{
+}
+void UpdateStage()
+{
+	SetPosition(10,10);
+	ChangeColor(Yellow);
+	printf("бс");
+}
+void ReleaseStage()
+{
+}
+
+#pragma endregion
 
 
 #pragma region WIN_API
@@ -73,4 +103,5 @@ void ChangeColor(Color color)
 {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
+
 #pragma endregion
