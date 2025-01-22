@@ -38,6 +38,7 @@ struct Obj
 
 Obj* player = nullptr;
 
+void CheckKeyInput();
 void InitStage();
 void UpdateStage();
 void ReleaseStage();
@@ -62,17 +63,42 @@ int main()
 }
 
 #pragma region STAGE
+
 void InitStage()
 {
+	if (player == nullptr)
+	{
+		player = (Obj*)malloc(sizeof(Obj));
+		player->x = 10;
+		player->y = 10;
+		player->color = Yellow;
+		player->shape = "бс";
+
+	}
 }
+
+void CheckKeyInput()
+{
+	if (GetAsyncKeyState(VK_LEFT)) 	player->x--;
+	if (GetAsyncKeyState(VK_RIGHT))	player->x++;
+	if (GetAsyncKeyState(VK_UP)) 	player->y--;
+	if (GetAsyncKeyState(VK_DOWN))	player->y++;
+}
+
 void UpdateStage()
 {
-	SetPosition(10,10);
-	ChangeColor(Yellow);
-	printf("бс");
+	CheckKeyInput();
+	SetPosition(player->x, player->y);
+	ChangeColor(player->color);
+	printf(player->shape);
 }
 void ReleaseStage()
 {
+	if (player != nullptr)
+	{
+		free(player);
+		player = nullptr;
+	}
 }
 
 #pragma endregion
