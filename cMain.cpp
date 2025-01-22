@@ -1,5 +1,35 @@
 #include <stdio.h>
 #include <Windows.h>
+
+#define MAP_WIDTH  20
+#define MAP_HEIGHT 20
+
+int map[MAP_HEIGHT][MAP_WIDTH] =
+{
+	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+	{1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1},
+	{1,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,3,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,0,0,2,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,1},
+	{1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1},
+	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1},
+	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1},
+	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+
+};
+
+
 #pragma region Enum
 enum Color
 {
@@ -21,7 +51,6 @@ enum Color
 	White,
 };
 #pragma endregion
-
 #pragma region WIN_API
 void HideCursor();
 void SetPosition(int x, int y);
@@ -36,9 +65,12 @@ struct Obj
 	const char* shape;
 };
 
-Obj* player = nullptr;
+Obj* player = nullptr;	   //player = 0; 할당되지 않았다 라고 표시
+
 
 void CheckKeyInput();
+bool IsBlocked();
+void ShowMap();
 void InitStage();
 void UpdateStage();
 void ReleaseStage();
@@ -72,17 +104,41 @@ void InitStage()
 		player->x = 10;
 		player->y = 10;
 		player->color = Yellow;
-		player->shape = "■";
+		player->shape = "＠";
 
 	}
 }
 
 void CheckKeyInput()
 {
-	if (GetAsyncKeyState(VK_LEFT)) 	player->x--;
-	if (GetAsyncKeyState(VK_RIGHT))	player->x++;
-	if (GetAsyncKeyState(VK_UP)) 	player->y--;
-	if (GetAsyncKeyState(VK_DOWN))	player->y++;
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		player->x--;
+		if (IsBlocked())
+			player->x++;
+	}
+
+	if (GetAsyncKeyState(VK_RIGHT))
+	{
+		player->x++;
+		if (IsBlocked())
+			player->x--;
+	}
+	
+	if (GetAsyncKeyState(VK_UP))
+	{
+		player->y--;
+		if (IsBlocked())
+			player->y++;
+	}
+
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		player->y++;
+		if (IsBlocked())
+			player->y--;
+	}
+
 }
 
 void UpdateStage()
@@ -91,7 +147,45 @@ void UpdateStage()
 	SetPosition(player->x, player->y);
 	ChangeColor(player->color);
 	printf(player->shape);
+
+	ShowMap();
 }
+
+bool IsBlocked()
+{
+	return  map[player->y][player->x] == 1;
+}
+
+void ShowMap()
+{
+	for (int y = 0; y < MAP_WIDTH; y++)
+	{
+		for (int x = 0; x < MAP_HEIGHT; x++)
+		{
+			switch (map[y][x])
+			{
+			case 1:
+				SetPosition(x, y);
+				ChangeColor(White);
+				printf("■");
+				break;
+			case 2:
+				SetPosition(x, y);
+				ChangeColor(Yellow);
+				printf("￦");
+				break;
+			case 3:
+				SetPosition(x, y);
+				ChangeColor(Red);
+				printf("♥");
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
 void ReleaseStage()
 {
 	if (player != nullptr)
