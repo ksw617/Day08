@@ -61,19 +61,23 @@ struct Obj
 {
 	int x;
 	int y;
+	int hp;
 	Color color;
 	const char* shape;
 };
 
 Obj* player = nullptr;	   //player = 0; 할당되지 않았다 라고 표시
 
-
-void CheckKeyInput();
-bool IsBlocked();
-void ShowMap();
+//전체 프로세싱
 void InitStage();
 void UpdateStage();
 void ReleaseStage();
+
+//내부 기능
+void CheckKeyInput();
+bool IsBlocked();
+void CheckItem();
+void ShowMap();
 
 int main()
 {
@@ -103,6 +107,7 @@ void InitStage()
 		player = (Obj*)malloc(sizeof(Obj));
 		player->x = 10;
 		player->y = 10;
+		player->hp = 1;
 		player->color = Yellow;
 		player->shape = "＠";
 
@@ -143,6 +148,7 @@ void CheckKeyInput()
 
 void UpdateStage()
 {
+	CheckItem();
 	CheckKeyInput();
 	SetPosition(player->x, player->y);
 	ChangeColor(player->color);
@@ -154,6 +160,21 @@ void UpdateStage()
 bool IsBlocked()
 {
 	return  map[player->y][player->x] == 1;
+}
+
+void CheckItem()
+{
+	switch (map[player->y][player->x])
+	{
+	case 2:
+		break;
+	case 3:
+		player->hp++;
+		map[player->y][player->x] = 0;
+		break;
+	default:
+		break;
+	}
 }
 
 void ShowMap()
