@@ -73,8 +73,9 @@ void InitStage();
 void UpdateStage();
 void ReleaseStage();
 
+void MoveEnemy();
 void CheckKeyInput();
-bool IsBlocked();
+bool IsBlocked(Obj* obj);
 void CheckItem();
 void ShowMap();
 
@@ -123,33 +124,71 @@ void InitStage()
 	}
 }
 
+void MoveEnemy()
+{
+	int randDir = rand() % 4;
+	switch (randDir)
+	{
+	case 0:
+		enemy->x--;
+		if (IsBlocked(enemy))
+		{
+			enemy->x++;
+		}
+		break;
+	case 1:
+		enemy->x++;
+		if (IsBlocked(enemy))
+		{
+			enemy->x--;
+		}
+		break;
+	case 2:
+		enemy->y--;
+		if (IsBlocked(enemy))
+		{
+			enemy->y++;
+		}
+		break;
+	case 3:
+		enemy->y++;
+		if (IsBlocked(enemy))
+		{
+			enemy->y--;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void CheckKeyInput()
 {
 	if (GetAsyncKeyState(VK_LEFT))
 	{
 		player->x--;
-		if (IsBlocked())
+		if (IsBlocked(player))
 			player->x++;
 	}
 
 	if (GetAsyncKeyState(VK_RIGHT))
 	{
 		player->x++;
-		if (IsBlocked())
+		if (IsBlocked(player))
 			player->x--;
 	}
 	
 	if (GetAsyncKeyState(VK_UP))
 	{
 		player->y--;
-		if (IsBlocked())
+		if (IsBlocked(player))
 			player->y++;
 	}
 
 	if (GetAsyncKeyState(VK_DOWN))
 	{
 		player->y++;
-		if (IsBlocked())
+		if (IsBlocked(player))
 			player->y--;
 	}
 
@@ -157,6 +196,7 @@ void CheckKeyInput()
 
 void UpdateStage()
 {
+	MoveEnemy();
 	CheckItem();
 	CheckKeyInput();
 
@@ -171,9 +211,9 @@ void UpdateStage()
 	ShowMap();
 }
 
-bool IsBlocked()
+bool IsBlocked(Obj* obj)
 {
-	return  map[player->y][player->x] == 1;
+	return  map[obj->y][obj->x] == 1;
 }
 
 void CheckItem()
