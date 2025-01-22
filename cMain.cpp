@@ -66,14 +66,13 @@ struct Obj
 	const char* shape;
 };
 
-Obj* player = nullptr;	   //player = 0; 할당되지 않았다 라고 표시
+Obj* player = nullptr;	 
+Obj* enemy = nullptr;
 
-//전체 프로세싱
 void InitStage();
 void UpdateStage();
 void ReleaseStage();
 
-//내부 기능
 void CheckKeyInput();
 bool IsBlocked();
 void CheckItem();
@@ -111,6 +110,16 @@ void InitStage()
 		player->color = Yellow;
 		player->shape = "＠";
 
+	}
+
+	if (enemy == nullptr)
+	{
+		enemy = (Obj*)malloc(sizeof(Obj));
+		enemy->x = 14;
+		enemy->y = 5;
+		enemy->hp = 1;
+		enemy->color = Magenta;
+		enemy->shape = "♣";
 	}
 }
 
@@ -150,9 +159,14 @@ void UpdateStage()
 {
 	CheckItem();
 	CheckKeyInput();
+
 	SetPosition(player->x, player->y);
 	ChangeColor(player->color);
 	printf(player->shape);
+
+	SetPosition(enemy->x, enemy->y);
+	ChangeColor(enemy->color);
+	printf(enemy->shape);
 
 	ShowMap();
 }
@@ -205,6 +219,21 @@ void ShowMap()
 			}
 		}
 	}
+
+
+
+	SetPosition(20, 0);
+	ChangeColor(Red);
+	printf("HP :");
+
+						  //1
+	for (int i = 0; i < player->hp; i++)
+	{
+		SetPosition(22 + i, 0);
+		ChangeColor(Red);
+		printf("♥");
+	}
+
 }
 
 void ReleaseStage()
